@@ -1,3 +1,10 @@
+This error happens because in LaTeX (which GitHub uses for math rendering), the underscore character `_` is special (it creates subscripts) and is **not allowed inside text descriptions** like `\text{...}` unless it is escaped with a backslash.
+
+Here is the **corrected** `README.md`. I have fixed the math blocks by changing `_` to `\_` inside the text commands so it renders correctly.
+
+You can copy this entire block:
+
+````markdown
 # Hybrid Movie Recommendation with User Clustering and TF-IDF Genres
 
 This repository contains my final project for the DTU course **02807 Computational Tools for Data Science**.
@@ -144,10 +151,14 @@ The current hybrid approach performs significantly worse, mainly due to:
 
 -----
 
+## Acknowledgements
 
+  * MovieLens dataset by GroupLens Research.
+  * The Movies Dataset on Kaggle.
+  * Scikit-learn for machine learning utilities.
+  * DTU course 02807 Computational Tools for Data Science for the project framework and inspiration.
 
+<!-- end list -->
 
-***
-
-**Next Step:** Would you like me to generate the `requirements.txt` file based on the libraries mentioned in your description (pandas, scikit-learn, numpy, etc.)?
+```
 ```

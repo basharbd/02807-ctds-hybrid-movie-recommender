@@ -83,18 +83,20 @@ There is also a small `data/README_data.md` file describing this.
 2.  **Cluster-only recommender:** For each user, recommend movies with high mean rating within that user’s k-means cluster, excluding already-rated movies.
 3.  **Hybrid recommender:**
 
-For each candidate movie $$ m $$:
+For each candidate movie ($m$):
 
-$$  
-\text{cluster\_score}(m) = \text{mean rating of \( m \) inside the user’s cluster}
-  $$
+$$
+\text{cluster_score}(m) = \text{mean rating of } (m) \text{ inside the user’s cluster}
+$$
 
-$$  
-\text{content\_score}(m) = \max \text{ TF–IDF cosine similarity between \( m \) and any liked movie}
-  $$
+$$
+\text{content_score}(m) = \text{maximum TF–IDF cosine similarity between } (m) \text{ and any movie the user liked (rating ≥ 4.0) in the training set}
+$$
 
 **Final score:**
-$$   \text{final\_score}(m) = 0.7 \cdot \text{cluster\_score}(m) + 0.3 \cdot \text{content\_score}(m)   $$
+
+```math
+\text{final_score}(m) = 0.7 \cdot \text{cluster_score}(m) + 0.3 \cdot \text{content_score}(m)
 
 **Evaluation metric:**
 

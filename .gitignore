@@ -1,0 +1,26 @@
+# OS / editor junk
+.DS_Store
+*.swp
+*.swo
+
+# Python / Jupyter
+__pycache__/
+.ipynb_checkpoints/
+*.pyc
+
+# LaTeX build files
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+
+# Virtual environments
+venv/
+.env/
+
+# Data files (keep only the small README)
+data/*
+!data/README_data.md

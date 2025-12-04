@@ -1,6 +1,5 @@
 
 
-````markdown
 # Hybrid Movie Recommendation with User Clustering and TF-IDF Genres
 
 This repository contains my final project for the DTU course **02807 Computational Tools for Data Science**.

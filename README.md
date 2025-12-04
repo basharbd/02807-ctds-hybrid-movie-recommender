@@ -1,8 +1,4 @@
-The error shown in your screenshot (`'_' allowed only in math mode`) happens because GitHub's math renderer (MathJax) treats the underscore `_` as a special command for subscripts. When you use it inside a text label like `\text{cluster_score}`, it crashes.
 
-**The Fix:** You must add a backslash `\` before every underscore inside the math blocks (e.g., change `cluster_score` to `cluster\_score`).
-
-Here is the **complete, corrected** `README.md` file in one single block. You can copy and paste this directly to fix the error.
 
 ````markdown
 # Hybrid Movie Recommendation with User Clustering and TF-IDF Genres
@@ -87,16 +83,18 @@ There is also a small `data/README_data.md` file describing this.
 2.  **Cluster-only recommender:** For each user, recommend movies with high mean rating within that user’s k-means cluster, excluding already-rated movies.
 3.  **Hybrid recommender:**
 
-For each candidate movie ($m$):
+For each candidate movie $$ m $$:
 
-  * $\text{cluster\_score}(m)$ = mean rating of ($m$) inside the user’s cluster
-  * $\text{content\_score}(m)$ = maximum TF–IDF cosine similarity between ($m$) and any movie the user liked (rating ≥ 4.0) in the training set
+$$  
+\text{cluster\_score}(m) = \text{mean rating of \( m \) inside the user’s cluster}
+  $$
+
+$$  
+\text{content\_score}(m) = \max \text{ TF–IDF cosine similarity between \( m \) and any liked movie}
+  $$
 
 **Final score:**
-
-$$
-\text{final\_score}(m) = 0.7 \cdot \text{cluster\_score}(m) + 0.3 \cdot \text{content\_score}(m)
-$$
+$$   \text{final\_score}(m) = 0.7 \cdot \text{cluster\_score}(m) + 0.3 \cdot \text{content\_score}(m)   $$
 
 **Evaluation metric:**
 
@@ -132,7 +130,7 @@ $$
 
 -----
 
-## Results (Short Summary)
+## Results 
 
 **Hit-rate@10 (sample of test users):**
 
@@ -149,16 +147,6 @@ The current hybrid approach performs significantly worse, mainly due to:
 3.  weak content features based only on genres (many movies share almost identical genre vectors)
 4.  heuristic thresholds and weights in the hybrid scoring function.
 
------
 
-## Acknowledgements
 
-  * MovieLens dataset by GroupLens Research.
-  * The Movies Dataset on Kaggle.
-  * Scikit-learn for machine learning utilities.
-  * DTU course 02807 Computational Tools for Data Science for the project framework and inspiration.
 
-<!-- end list -->
-
-```
-```

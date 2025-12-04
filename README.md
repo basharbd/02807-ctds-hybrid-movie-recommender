@@ -85,18 +85,14 @@ There is also a small `data/README_data.md` file describing this.
 
 For each candidate movie ($m$):
 
-$$
-\text{cluster_score}(m) = \text{mean rating of } (m) \text{ inside the user’s cluster}
-$$
-
-$$
-\text{content_score}(m) = \text{maximum TF–IDF cosine similarity between } (m) \text{ and any movie the user liked (rating ≥ 4.0) in the training set}
-$$
+  * $\text{cluster-score}(m)$ = mean rating of ($m$) inside the user’s cluster
+  * $\text{content-score}(m)$ = maximum TF–IDF cosine similarity between ($m$) and any movie the user liked (rating ≥ 4.0) in the training set
 
 **Final score:**
 
-```math
-\text{final_score}(m) = 0.7 \cdot \text{cluster_score}(m) + 0.3 \cdot \text{content_score}(m)
+$$
+\text{final-score}(m) = 0.7 \cdot \text{cluster-score}(m) + 0.3 \cdot \text{content-score}(m)
+$$
 
 **Evaluation metric:**
 
@@ -132,7 +128,7 @@ $$
 
 -----
 
-## Results 
+## Results (Short Summary)
 
 **Hit-rate@10 (sample of test users):**
 
@@ -149,6 +145,16 @@ The current hybrid approach performs significantly worse, mainly due to:
 3.  weak content features based only on genres (many movies share almost identical genre vectors)
 4.  heuristic thresholds and weights in the hybrid scoring function.
 
+-----
 
+## Acknowledgements
 
+  * MovieLens dataset by GroupLens Research.
+  * The Movies Dataset on Kaggle.
+  * Scikit-learn for machine learning utilities.
+  * DTU course 02807 Computational Tools for Data Science for the project framework and inspiration.
 
+<!-- end list -->
+
+```
+```

@@ -144,14 +144,7 @@ The current hybrid approach performs significantly worse, mainly due to:
 3.  weak content features based only on genres (many movies share almost identical genre vectors)
 4.  heuristic thresholds and weights in the hybrid scoring function.
 
------
 
-## Acknowledgements
-
-  * MovieLens dataset by GroupLens Research.
-  * The Movies Dataset on Kaggle.
-  * Scikit-learn for machine learning utilities.
-  * DTU course 02807 Computational Tools for Data Science for the project framework and inspiration.
 
 <!-- end list -->
 

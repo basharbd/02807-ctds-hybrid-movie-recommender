@@ -1,0 +1,288 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{float}
+
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  urlcolor=blue
+}
+
+\title{Hybrid Movie Recommendation with User Clustering and TF--IDF Genres}
+\author{Bashar Bdewi (sXXXXX)} % TODO: replace with real student number
+\date{02807 Computational Tools for Data Science\\Technical University of Denmark\\Fall 2025}
+
+\begin{document}
+
+% ---------- COVER PAGE ----------
+\begin{titlepage}
+  \centering
+  % DTU logo (upload as dtu_logo.pdf/png to Overleaf)
+  \vspace*{1cm}
+  \includegraphics[width=0.9\textwidth]{logo dtu.jpg}\\[1cm]
+
+
+  {\large 02807 Computational Tools for Data Science}\\[2cm]
+
+  {\huge\bfseries Hybrid Movie Recommendation\\[0.2cm]
+  with User Clustering and TF--IDF Genres}\\[2cm]
+
+  \vfill
+
+  \begin{flushleft}
+  \textbf{Student:}\\
+  Bashar Bdewi (s183356)\\[0.8cm]  % TODO: update ID
+
+
+
+  \textbf{Date:}\\
+  \today
+  \end{flushleft}
+
+  \vfill
+\end{titlepage}
+
+% ---------- TABLE OF CONTENTS PAGE ----------
+\pagenumbering{roman}
+\tableofcontents
+\clearpage
+
+% ---------- MAIN REPORT ----------
+\pagenumbering{arabic}
+
+\section*{Abstract}
+\addcontentsline{toc}{section}{Summary}
+
+This project builds and evaluates a small movie recommender system using tools from 02807 plus one external method. The main course topic is \emph{clustering} (k-means) on a user--item rating matrix; this is combined with a \emph{content-based} component using TF--IDF on movie genres (external method).
+
+In this report, I first motivate the problem of building a movie recommender system and explain why it is relevant in practice. I then describe the datasets I use, how I clean and merge them, and how I construct the user--item matrix and genre-based features. Afterwards, I present the three recommendation strategies: a simple popularity baseline, a k-means based cluster-only model, and a hybrid model that combines clustering with TF--IDF genre similarity, together with the evaluation setup. 
+
+\section{Problem and Motivation}
+\label{sec:problem}
+
+Recommender systems are a classic data-science problem with clear real-world relevance in platforms such as Netflix and e-commerce sites. The goal is to suggest items that a user is likely to enjoy, based on past interactions and item content.
+
+In this project, I investigate a \emph{hybrid} movie recommender that combines:
+\begin{itemize}
+  \item a collaborative signal based on \textbf{k-means clustering of users} (course topic), 
+  \item a content-based signal derived from \textbf{TF--IDF features over movie genres} (external method).
+\end{itemize}
+The main question is whether this simple hybrid design can improve over a popularity baseline when evaluated on held-out ratings.
+
+\section{Data and Preprocessing}
+\label{sec:data}
+
+\subsection{Data sources}
+
+Two public datasets are used:
+\begin{itemize}
+  \item \textbf{MovieLens ``latest small''}: 100,004 explicit ratings from 671 users on 9,066 movies.
+  \item \textbf{Kaggle ``The Movies Dataset''}: movie metadata including \texttt{id}, \texttt{title}, and a JSON-encoded \texttt{genres} list.
+\end{itemize}
+
+Both files were downloaded manually and placed in a local \texttt{data/} folder. I keep only movies that appear in both datasets and have valid integer IDs. After merging and cleaning, the final movie table contains \textbf{2,831 movies} with columns: \texttt{movieId} (MovieLens ID), \texttt{title}, and \texttt{genres} (list of \texttt{\{id,name\}} objects).
+
+\subsection{Ratings and user--item matrix}
+
+Ratings are randomly split into 80\% train (80,003 rows) and 20\% test (20,001 rows). The rating distribution shows a strong positive bias (mean 3.54 with most ratings in $\{3,4,5\}$). User activity and movie popularity are highly skewed: many users and movies have few ratings, while a few are extremely active or popular.
+
+From the training data I build a user--item matrix:
+\begin{itemize}
+  \item rows = 671 users,
+  \item columns = 8,399 movies that appear in the training set,
+  \item entries = rating value if observed, otherwise NaN.
+\end{itemize}
+For algorithms that cannot handle missing values (k-means), NaNs are replaced with 0.0. The resulting matrix is extremely sparse (about 1.4\% non-zero), which is typical for recommender data.
+
+\subsection{Genre text representation}
+
+To use content-based similarity, I convert the JSON \texttt{genres} field into a space-separated string, e.g.\ ``Drama Crime Thriller''. I then apply \texttt{TfidfVectorizer}  on \texttt{genres\_str} for all 2,831 movies, yielding a TF--IDF matrix of shape $2831 \times 22$ (22 distinct genre tokens). Pairwise cosine similarity between TF--IDF vectors gives a $2831 \times 2831$ similarity matrix where entry $(i,j)$ measures how similar movie $i$ is to movie $j$ based on genres.
+
+As a sanity check, using \emph{Heat} as a query movie returns other crime--action--drama titles such as \emph{Scarface} among the most similar items with cosine similarity 1.0, confirming that the content representation behaves as intended, though it is rather coarse and not very discriminative.
+
+\section{Methods}
+\label{sec:methods}
+
+\subsection{Popularity baseline}
+
+The baseline recommender ranks movies globally by their mean rating in the training set, restricted to movies with at least 20 ratings. For any user, the top-$N$ list is simply the same global top-$N$, excluding movies that the user has already rated in the training data. This model does not use any personalisation but is a strong and simple baseline when the item popularity distribution is heavy-tailed.
+
+\subsection{K-means user clustering}
+
+The main course-related method is k-means clustering on the user--item matrix. I apply \texttt{KMeans} with $K=20$ clusters on \texttt{user\_item\_filled} (missing ratings set to 0.0). Each user is assigned to one cluster.
+
+Cluster sizes are highly unbalanced: one cluster contains about 330 users, while several clusters contain fewer than five users. A 2D PCA projection of users coloured by cluster assignment is shown in Figure~\ref{fig:pca_clusters}. The clusters overlap strongly in this low-dimensional view, and the Davies--Bouldin index is 2.052, indicating low compactness and separation.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.5\linewidth]{pca_kmeans}
+  \caption{Users projected to 2D PCA space and coloured by k-means cluster.}
+  \label{fig:pca_clusters}
+\end{figure}
+
+
+\subsection{Cluster-only recommender}
+
+For a user $u$ in cluster $c$, the cluster-only recommender:
+\begin{enumerate}
+  \item selects all users in cluster $c$,
+  \item computes the mean rating per movie within the cluster,
+  \item filters out movies already rated by $u$ and movies with too few ratings in the cluster,
+  \item ranks remaining movies by cluster-mean rating and recommends the top-$N$.
+\end{enumerate}
+If no eligible movies are found (e.g.\ very small cluster), the algorithm falls back to the popularity baseline.
+
+\subsection{Hybrid recommender}
+
+The hybrid recommender combines collaborative and content information:
+\begin{enumerate}
+  \item Identify movies that user $u$ liked in the training data (ratings $\geq 4.0$).
+  \item Obtain cluster-based candidates as in the cluster-only model.
+  \item For each liked movie, retrieve its most similar movies using the TF--IDF cosine similarity matrix.
+  \item Merge candidate sets, remove movies already rated by $u$.
+  \item For each candidate movie $m$, compute
+  \begin{align*}
+    \text{cluster\_score}(m) &= \text{mean rating of $m$ in cluster $c$},\\
+    \text{content\_score}(m) &= \max_{l \in \text{liked}(u)} \cos\big(\text{TFIDF}(m), \text{TFIDF}(l)\big).
+  \end{align*}
+  \item Combine them into
+  \[
+    \text{final\_score}(m) = 0.7 \cdot \text{cluster\_score}(m) + 0.3 \cdot \text{content\_score}(m),
+  \]
+  and rank by \texttt{final\_score}.
+\end{enumerate}
+If $u$ has no liked movies in the training set, the hybrid recommender falls back to the cluster-only model.
+
+\subsection{Evaluation metric}
+
+To compare models, I use hit-rate@10. For a user $u$, let $T(u)$ be the set of movies that the user rated in the \emph{test} data and $R(u)$ the top-10 recommendation list from the model. User $u$ counts as a hit if $T(u)\cap R(u)\neq \emptyset$. Hit-rate@10 is the fraction of evaluated users with a hit.
+
+I evaluate the popularity and cluster-only models on 200 test users, and the hybrid model on 160 users (those with at least one liked movie in the training set).
+
+\section{Results}
+\label{sec:results}
+
+For an example user, the cluster-only recommender suggests classic, well-rated films such as \emph{While You Were Sleeping}, \emph{Lassie Come Home}, and \emph{Edward Scissorhands}, which are popular within the user's cluster. The hybrid recommender returns similar items but slightly reorders them depending on genre similarity; movies that are both highly rated in the cluster and genre-similar to the user's liked items receive the highest final scores.
+
+Table~\ref{tab:hitrate} summarises the hit-rate@10 results. 
+
+\begin{table}[H]
+  \centering
+  \caption{Hit-rate@10 on a sample of test users.}
+  \label{tab:hitrate}
+  \begin{tabular}{lc}
+    \toprule
+    Model        & Hit-rate@10 \\
+    \midrule
+    Popularity   & 0.210 \\
+    Cluster-only & 0.210 \\
+    Hybrid       & 0.037 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+and Figure~\ref{fig:hitrate_bar} shows them visually.
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\linewidth]{fig_hitrate_models}
+  \caption{Comparison of hit-rate@10 across models.}
+  \label{fig:hitrate_bar}
+\end{figure}
+
+
+The popularity baseline and cluster-only model both achieve a hit-rate@10 of 0.210, i.e.\ for about 21\% of evaluated users at least one held-out movie appears in the top-10 list. The hybrid model performs substantially worse, with hit-rate@10 of only 0.037.
+
+During evaluation, the cluster-only model often fails to find enough unseen movies within a cluster satisfying the minimum rating threshold and therefore falls back to the global popularity list, which explains why both models obtain the same hit-rate. The hybrid model also frequently falls back to cluster-only or popularity when users lack liked movies in the training set or when candidate filtering becomes too strict.
+
+\section{Discussion and Limitations}
+\label{sec:discussion}
+
+The experiments show that, in this setting, user clustering with k-means does not provide a clear improvement over a global popularity model, and the proposed hybrid approach even degrades performance.
+
+Several factors likely contribute:
+\begin{itemize}
+  \item The user--item matrix is extremely sparse, and representing missing ratings as 0.0 is a crude approximation that distorts Euclidean distances used by k-means.
+  \item The resulting clusters are unbalanced and overlapping (large Davies--Bouldin index and the PCA visualisation in Figure~\ref{fig:pca_clusters}), meaning that users within a cluster are not necessarily much more similar to each other than to users in other clusters.
+  \item The content features are very coarse: TF--IDF over a small set of genre labels produces many nearly identical vectors, so the content signal is weak and not very discriminative.
+  \item The hybrid design and hyperparameters (rating threshold, minimum rating counts, 0.7/0.3 weighting) were chosen heuristically and not tuned. The additional filtering introduced by the hybrid logic appears to remove many relevant test items from the candidate set.
+\end{itemize}
+
+
+
+\section{Conclusion and Future Work}
+\label{sec:conclusion}
+
+This project implemented and analysed a hybrid movie recommender that combines k-means user clustering  with TF--IDF-based genre similarity. While the popularity and cluster-only models achieved a modest hit-rate@10 of 0.21, the current hybrid approach performed significantly worse at 0.037.
+
+The main lessons are that k-means on sparse rating vectors is a weak collaborative model compared to more specialised techniques such as matrix factorisation, and that simple genre-only TF--IDF features provide limited additional information. Future work could explore matrix factorisation or neural collaborative filtering as the collaborative component, richer content features (plots, tags, or learned text embeddings), and systematic hyperparameter tuning of the hybrid weighting scheme and candidate generation strategy.\\
+
+The full code, notebook, and report sources are available at:
+\url{https://github.com/basharbd/02807-ctds-hybrid-movie-recommender}
+
+
+% ---------- REFERENCES + AI ----------
+\clearpage
+\section*{Bibliography}
+\addcontentsline{toc}{section}{References}
+
+\begin{thebibliography}{9}
+
+\bibitem{movielens}
+F. Maxwell Harper and Joseph A. Konstan.
+\newblock The MovieLens datasets: History and context.
+\newblock \emph{ACM Transactions on Interactive Intelligent Systems}, 5(4), 2015.
+\newblock Dataset available at: \url{https://grouplens.org/datasets/movielens/}
+
+\bibitem{kaggle_movies}
+The Movies Dataset.
+\newblock Kaggle.
+\newblock Available at: \url{https://www.kaggle.com/datasets/rounakbanik/the-movies-dataset}
+
+\bibitem{scikit}
+F. Pedregosa et al.
+\newblock Scikit-learn: Machine learning in Python.
+\newblock \emph{Journal of Machine Learning Research}, 12, pp.~2825--2830, 2011.
+\newblock Project documentation: \url{https://scikit-learn.org/}
+
+\bibitem{rik}
+J. Leskovec, A. Rajaraman, and J. Ullman.
+\newblock \emph{Mining of Massive Datasets}.
+\newblock Cambridge University Press, 2nd edition, 2014.
+\newblock Book homepage: \url{http://www.mmds.org/}
+
+
+\bibitem{github_movie_rec}
+Saadat Rizvi.
+\newblock Movie Recommendation System (GitHub repository).
+\newblock Available at: \url{https://github.com/SaadatRizvi/Movie-Recommendation-System}
+
+\end{thebibliography}
+
+\subsection*{Use of Generative AI}
+\addcontentsline{toc}{subsection}{Use of Generative AI}
+
+The generative AI tools I have used: ChatGPT (OpenAI, GPT-5.1 ), Which were used to help brainstorm the project design, structure the notebook( plotting, k-means, TF-IDF,  loops), and to rephrase parts of the report text.
+
+
+
+I reviewed, adapted, and tested all suggested code before using it, and edited to match my own understanding and the actual results. 
+
+All final design decisions, experiments, and interpretations are my own responsibility.
+
+\subsection*{Contribution}
+\addcontentsline{toc}{subsection}{Contribution}
+
+The project was completed as an individual project, with this arrangement approved by Karl and David. 
+
+
+
+\end{document}

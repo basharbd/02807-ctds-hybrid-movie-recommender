@@ -28,7 +28,7 @@ This project uses two public datasets:
 - **The Movies Dataset (Kaggle)** Movie metadata including titles and JSON-encoded genre lists.  
   Available from: <https://www.kaggle.com/datasets/rounakbanik/the-movies-dataset>
 
-For licensing and size reasons, **raw data files are not included** in this repository.
+For licensing reasons, **raw data files are not included** in this repository.
 
 Please download:
 

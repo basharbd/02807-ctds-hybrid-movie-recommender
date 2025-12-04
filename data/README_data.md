@@ -11,4 +11,4 @@ Download them manually from the official pages:
 - Kaggle Movies Dataset: https://www.kaggle.com/datasets/rounakbanik/the-movies-dataset
 
 Place the CSV files in this `data/` folder before running the notebook.
-The raw data files are not included in the repository due to size and licensing.
+The raw data files are not included in the repository due to licensing.
